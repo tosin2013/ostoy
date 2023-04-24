@@ -15,6 +15,7 @@ which you can:
 * increase the load to test out Horizontal Pod Autoscaler
 * if deployed to AWS, use the app to read the contents of an S3 bucket created with the AWS Controller for Kubernetes
 
+![20230424120817](https://i.imgur.com/OSUFdlN.png)
 
 # Configuration
 ## Environment Variables
