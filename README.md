@@ -43,6 +43,7 @@ kustomize build app/  | oc create -f -
 ```
 
 # Using ArgoCD
+![20230424120736](https://i.imgur.com/top72xO.png)
 *Optional: change target Repo*
 * app-config/cluster-config.yaml
 * app/builds/patch-ostoy-repo.yml
