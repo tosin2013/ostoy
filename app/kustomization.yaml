@@ -2,6 +2,7 @@ resources:
 - builds/
 - secret.yaml
 - configmap.yaml
+- pvc.yaml
 - deployments/
 - services/
 - route/
