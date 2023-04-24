@@ -27,7 +27,7 @@ spec:
             defaultMode: 420
         - name: volume-xwtd2
           persistentVolumeClaim:
-            claimName: pvc-7ckwq
+            claimName: pvc-ostoy
       containers:
         - resources: {}
           terminationMessagePath: /dev/termination-log
