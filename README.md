@@ -43,7 +43,15 @@ kustomize build app/  | oc create -f -
 ```
 
 # Using ArgoCD
-* WIP
+*Optional: change target Repo*
+* app-config/cluster-config.yaml
+* app/builds/patch-ostoy-repo.yml
+* app/builds/patch-ostoy-microservice-build.yml
+```bash
+oc create -f app-config/cluster-config.yaml
+```
+
+
 
 # To Do override default git repo url in kustomize 
 

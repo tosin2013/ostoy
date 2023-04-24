@@ -3,3 +3,8 @@ resources:
 - ostoy-microservice-imagestream.yaml
 - ostoy-1-build.yaml
 - ostoy-microservice-build.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patchesStrategicMerge:
+  - patch-ostoy-repo.yml
+  - patch-ostoy-microservice-build.yml

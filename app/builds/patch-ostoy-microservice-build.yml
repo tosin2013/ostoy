@@ -1,0 +1,9 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: ostoy-microservice
+spec:
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/tosin2013/ostoy'
