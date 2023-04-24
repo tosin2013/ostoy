@@ -43,7 +43,9 @@ kustomize build app/
 
 # Using ArgoCD
 * WIP
-  
+
+# To Do override default git repo url in kustomize 
+
 # Deployment
 
 ## Using `oc` commands
