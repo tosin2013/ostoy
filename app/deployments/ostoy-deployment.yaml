@@ -55,7 +55,7 @@ spec:
               mountPath: /var/demo_files
           terminationMessagePolicy: File
           image: >-
-            image-registry.openshift-image-registry.svc:5000/ostoy-dev/ostoy:latest
+            image-registry.openshift-image-registry.svc:5000/ostoy/ostoy:latest
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst

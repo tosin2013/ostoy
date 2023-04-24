@@ -22,7 +22,7 @@ spec:
       containers:
         - name: ostoy-microservice
           image: >-
-            image-registry.openshift-image-registry.svc:5000/ostoy-dev/ostoy-microservice:latest
+            image-registry.openshift-image-registry.svc:5000/ostoy/ostoy-microservice:latest
           ports:
             - containerPort: 8080
               protocol: TCP

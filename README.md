@@ -38,7 +38,8 @@ with the PersistentVolume
 # Using kustommize 
 ```bash
 git clone https://github.com/tosin2013/ostoy.git
-kustomize build app/  
+oc new-project ostoy
+kustomize build app/  | oc create -f -
 ```
 
 # Using ArgoCD
