@@ -2,7 +2,6 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: ostoy
-  namespace: ostoy-dev
   labels:
     app: ostoy
     app.kubernetes.io/component: ostoy
