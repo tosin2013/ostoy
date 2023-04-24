@@ -1,0 +1,5 @@
+resources:
+- ostoy-1-imagestream.yaml
+- ostoy-microservice-imagestream.yaml
+- ostoy-1-build.yaml
+- ostoy-microservice-build.yaml

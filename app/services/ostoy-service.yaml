@@ -1,0 +1,20 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: ostoy
+  labels:
+    app: ostoy
+    app.kubernetes.io/component: ostoy
+    app.kubernetes.io/instance: ostoy
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  internalTrafficPolicy: Cluster
+  type: ClusterIP
+  ipFamilyPolicy: SingleStack
+  sessionAffinity: None
+  selector:
+    deployment: ostoy

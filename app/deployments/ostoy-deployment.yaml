@@ -1,0 +1,70 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: ostoy
+  namespace: ostoy-dev
+  labels:
+    app: ostoy
+    app.kubernetes.io/component: ostoy
+    app.kubernetes.io/instance: ostoy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: ostoy
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        deployment: ostoy
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+    spec:
+      volumes:
+        - name: volume-bd544
+          secret:
+            secretName: ostoy-secret
+            defaultMode: 420
+        - name: volume-xwtd2
+          persistentVolumeClaim:
+            claimName: pvc-7ckwq
+      containers:
+        - resources: {}
+          terminationMessagePath: /dev/termination-log
+          name: ostoy
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: MICROSERVICE_NAME
+              value: OSTOY_MICROSERVICE
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: volume-bd544
+              mountPath: /var/secret
+            - name: volume-xwtd2
+              mountPath: /var/demo_files
+          terminationMessagePolicy: File
+          image: >-
+            image-registry.openshift-image-registry.svc:5000/ostoy-dev/ostoy
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

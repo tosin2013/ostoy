@@ -1,0 +1,33 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: ostoy-microservice
+  labels:
+    app: ostoy
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'ostoy-microservice:latest'
+  resources: {}
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        namespace: openshift
+        name: 'nodejs:16-ubi8'
+  postCommit: {}
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/openshift-cs/ostoy'
+    contextDir: microservice
+  triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChange: {}
+  runPolicy: Serial

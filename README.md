@@ -35,7 +35,15 @@ the Secret object
 - **PERSISTENT_DIRECTORY** (*default: /var/demo\_files*): The fully-qualified path to the directory mounted
 with the PersistentVolume
 
+# Using kustommize 
+```bash
+git clone https://github.com/tosin2013/ostoy.git
+kustomize build app/  
+```
 
+# Using ArgoCD
+* WIP
+  
 # Deployment
 
 ## Using `oc` commands

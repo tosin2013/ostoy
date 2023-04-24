@@ -1,0 +1,44 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: ostoy-microservice
+  labels:
+    app: ostoy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ostoy
+      deployment: ostoy-microservice
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: ostoy
+        deployment: ostoy-microservice
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+    spec:
+      containers:
+        - name: ostoy-microservice
+          image: >-
+            image-registry.openshift-image-registry.svc:5000/ostoy-dev/ostoy-microservice
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

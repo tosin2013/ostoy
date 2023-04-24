@@ -1,0 +1,11 @@
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  name: ostoy
+  labels:
+    app: ostoy
+    app.kubernetes.io/component: ostoy
+    app.kubernetes.io/instance: ostoy
+spec:
+  lookupPolicy:
+    local: false

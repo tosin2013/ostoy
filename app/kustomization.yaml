@@ -1,0 +1,7 @@
+resources:
+- builds/
+- secret.yaml
+- configmap.yaml
+- deployments/
+- services/
+- route/

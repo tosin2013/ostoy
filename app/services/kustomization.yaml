@@ -1,0 +1,3 @@
+resources:
+- ostoy-microservice.yaml
+- ostoy-service.yaml
