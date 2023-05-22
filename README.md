@@ -1,5 +1,5 @@
 # OSToy
-## v1.5.0
+## v1.6.0
 
 A simple Node.js application that deploys to OpenShift. It is used to help
 explore the functionality of Kubernetes. This toy application has a user interface
@@ -13,7 +13,8 @@ which you can:
 * check network connectivity, intra-cluster DNS, and intra-communication with an
   included microservice
 * increase the load to test out Horizontal Pod Autoscaler
-* if deployed to AWS, use the app to read the contents of an S3 bucket created with the AWS Controller for Kubernetes
+* if deployed to AWS, use the app to read the contents of an S3 bucket 
+* if deployed to Azure, use the app to read the contents of a Blob storage container
 
 
 # Configuration
@@ -34,6 +35,7 @@ the ConfigMap object
 the Secret object
 - **PERSISTENT_DIRECTORY** (*default: /var/demo\_files*): The fully-qualified path to the directory mounted
 with the PersistentVolume
+- **AZURE_CONNECTION_STRING_LOCATION** (*default: /mnt/secrets-store/connectionsecret*): The fully-qualified path to the mounted connection string secret
 
 
 # Deployment
@@ -159,4 +161,5 @@ $ python -m webbrowser "$(oc get route ostoy -o template --template='https://{{.
 * Include intra-cluster communication from Networking page
   * Adds a separate `microservice` sub-deployment
 * Add function to increase load to test HPA
-* Add ACK integration
+* Add S3 integration
+* Add Azure Blob storage integration
