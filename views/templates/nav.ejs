@@ -79,6 +79,14 @@
             </a>
         </li>
         <% } %>
+        <% if (locals.isAzure) { %>
+            <li class="list-group-item<% if (locals.page !== undefined && page == 'aso') { %> active<% } %>">
+                <a href="/aso">
+                    <span class="fa fa-server" data-toggle="tooltip" title="ASO - Blob Store"></span>
+                    <span class="list-group-item-value">ASO - Blob Storage</span>
+                </a>
+            </li>
+            <% } %>
         <li class="list-group-item<% if (locals.page !== undefined && page == 'about') { %> active<% } %>">
             <a href="/about">
                 <span class="pficon pficon-info" data-toggle="tooltip" title="About"></span>
