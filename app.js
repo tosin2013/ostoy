@@ -9,7 +9,8 @@ const fs = require('fs');
 const http = require('http');
 const dns = require('dns');
 const AWS = require('aws-sdk');
-const appVersion = '1.5.0';
+const { BlobServiceClient } = require("@azure/storage-blob");
+const appVersion = '1.6.0';
 
 /*
   CONFIGURE APPLICATION
@@ -40,23 +41,20 @@ let servicePort = process.env.MICROSERVICE_PORT || process.env[service + '_SERVI
 let configFile = process.env.CONFIG_FILE || '/var/config/config.json';
 let secretFile = process.env.SECRET_FILE || '/var/secret/secret.txt';
 let directory = process.env.PERSISTENT_DIRECTORY || '/var/demo_files';
+let azureConnectionStringFile = process.env.AZURE_CONNECTION_STRING_LOCATION || '/mnt/secrets-store/connectionsecret';
 
 if (!path.isAbsolute(configFile)) { configFile = path.resolve(__dirname, configFile); }
 if (!path.isAbsolute(secretFile)) { secretFile = path.resolve(__dirname, secretFile); }
 if (!path.isAbsolute(directory)) { directory = path.resolve(__dirname, directory); }
 
-// Pod name
-let pod = process.env.HOSTNAME || 'Unknown pod';
-
-//Namespace
-let ns = process.env.NAMESPACE;
+let pod = process.env.HOSTNAME || 'Unknown pod'; // Pod name
+let ns = process.env.NAMESPACE; //Namespace
 
 // Booleans
 let healthy = true;
 let hasFilesystem = fs.existsSync(directory);
 let hasSecret = fs.existsSync(secretFile);
 let hasConfigMap = fs.existsSync(configFile);
-
 
 /*
   SETUP COMMON, SHARED VARIABLES
@@ -67,6 +65,12 @@ app.locals.hasFilesystem = hasFilesystem;
 app.locals.hasSecret = hasSecret;
 app.locals.hasConfigMap = hasConfigMap;
 app.locals.isAWS = undefined; //use this for automated checking
+app.locals.isAzure = undefined; //use this for automated checking if this is on azure
+
+//AZURE RELATED VARIABLES
+let connectionString = undefined; //the connection string to the Azure Storage Account
+let blobServiceClient = undefined;
+let containerClient = undefined;
 
 /*
   DEBUGGING URLS
@@ -295,7 +299,7 @@ app.get('/env-variables', function(request, response) {
 //returns the object keys (names) that are in the bucket
 app.get('/ack', function(request, response) {
   if (!app.locals.isAWS) {
-    console.error("ACK can only be accessed on AWS.");
+    console.error('ACK can only be accessed on AWS.');
     response.render('error', {'msg': 'In order to use the ACK this must be run on AWS.'});
   } else {
     // Create S3 service object
@@ -320,7 +324,7 @@ app.get('/ack', function(request, response) {
 //Get the selected object from the S3 bucket and render to the browser
 app.get('/getFile', function(request, response) {
   if (!app.locals.isAWS) {
-    console.error("ACK can only be accessed on AWS.");
+    console.error('ACK can only be accessed on AWS.');
     response.render('error', {'msg': 'In order to use the ACK this must be run on AWS.'});
   } else {
 
@@ -339,7 +343,7 @@ app.get('/getFile', function(request, response) {
         console.error(err);
         response.render('error', {'msg': JSON.stringify(err, null, 4)});
       } else {
-        response.render('s3viewfile', {'filename': filename, 'content': data.Body});
+        response.render('viewcontents', {'filename': filename, 'content': data.Body});
       }
     });
   }
@@ -348,7 +352,7 @@ app.get('/getFile', function(request, response) {
 //create an object in the s3 bucket
 app.post('/s3upload', function(request, response) {
   if (!app.locals.isAWS) {
-    console.error("ACK can only be accessed on AWS.");
+    console.error('ACK can only be accessed on AWS.');
     response.render('error', {'msg': 'Wrong cloud platform. In order to use the ACK this must be run on AWS.'});
   } else {
     let filename = request.body.filename;
@@ -372,6 +376,75 @@ app.post('/s3upload', function(request, response) {
         response.redirect('/ack');
       }
     });
+  }
+});
+
+/*
+  AZURE SERVICE OPERATOR
+
+  This is for the section of the workshop to demonstrate the ASO.  This section supports the reading and writing of blobs
+  to the Blob Storage account.  The set up of the storage "clients" is done in the checkIfAzure() method further below.
+*/
+
+//Get list of blob names in the container
+app.get('/aso', async (request, response) => {
+  if (!app.locals.isAzure) {
+    console.error('ASO can only be used with Azure.');
+    response.render('error', {'msg': 'In order to use the ASO feature this must be run on Azure.'});
+  } else {
+    const blobs = containerClient.listBlobsFlat();
+    const blobNames = [];
+
+    for await (const blob of blobs) {
+      blobNames.push(blob.name);
+    }
+    response.render('aso', { 'blobnames': blobNames, 'containername': ns + "-container" });
+  }
+});
+
+//View the contents of a blob file
+app.get('/viewblob/:blobName', async (request, response) => {
+  if (!app.locals.isAzure) {
+    console.error('ASO can only be used with Azure.');
+    response.render('error', {'msg': 'In order to use the ASO feature this must be run on Azure.'});
+  } else {
+    const blobName = request.params.blobName;
+
+    try {
+      const blobClient = containerClient.getBlobClient(blobName);
+      const downloadBlockBlobResponse = await blobClient.download();
+      const blobContents = await streamToString(downloadBlockBlobResponse.readableStreamBody);
+      response.render('viewcontents', {'filename': blobName, 'content': blobContents});
+    } catch (error) {
+        if (error.statusCode === 404 && error.code === "BlobNotFound") {
+          console.log("Blob not found");
+          response.render('error', {'msg': blobName + ' not found.'});
+        } else {
+          console.error('An error occurred: ' + error.message);
+          response.render('error', {'msg': error.message});
+        }
+    }
+  }
+});
+
+//Upload or create a new text blob
+app.post('/createblob', async (request, response) => {
+  if (!app.locals.isAzure) {
+    console.error('ASO can only be used with Azure.');
+    response.render('error', {'msg': 'In order to use the ASO feature this must be run on Azure.'});
+  } else {
+    let filename = request.body.filename;
+    let content = request.body.content;
+
+    try {
+      const blockBlobClient = containerClient.getBlockBlobClient(filename);
+      const uploadResult = await blockBlobClient.upload(content, content.length);
+      console.log('Blob ' + filename + ' has been created.');
+      response.redirect('/aso');
+    } catch (error) {
+      console.error('Error uploading file ' + filename + ' to blob storage: ' + error.message);
+      response.render('error', {'msg': 'Error uploading file: ' + error.message});
+    }
   }
 });
 
@@ -462,6 +535,55 @@ function processDNS(hostname, response) {
   });
 }
 
+async function streamToString(readableStream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    readableStream.on('data', (data) => {
+      chunks.push(data.toString());
+    });
+    readableStream.on('end', () => {
+      resolve(chunks.join(''));
+    });
+    readableStream.on('error', reject);
+  });
+}
+
+//The following function is used to check if this app is running on Azure and has a valid container accessible.
+//If it is it also sets up the clients.
+async function checkIfAzure() {
+
+  //check if the connectionString secret is mounted to the location in the pod
+  if (fs.existsSync(azureConnectionStringFile)) {
+    console.log('Connection string secret file exists');
+    connectionString = fs.readFileSync(azureConnectionStringFile, 'utf8');
+  } else {
+    console.log('Connection string secret file does not exist or is not readable.');
+  }
+
+  if (connectionString === undefined){
+    app.locals.isAzure = false;
+    console.log("ASO feature disabled. Connection string not found.");
+  } else {
+    try{
+      blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+      containerClient = blobServiceClient.getContainerClient(ns + "-container");
+
+      const exists = await containerClient.exists();
+
+      if (exists) {
+        app.locals.isAzure = true;
+        console.log("ASO feature enabled.");
+      } else {
+        app.locals.isAzure = false;
+        console.log("ASO feature disabled. " + ns + "-container not found.");
+      }
+    } catch (error) {
+      app.locals.isAzure = false;
+      console.log("ASO feature disabled. Error: " + error.message);
+    }
+  }
+} 
+
 /*
   ABOUT URLS/FUNCTIONS
  */
@@ -475,7 +597,7 @@ app.get('/about', function(request, response) {
  */
 console.log(`Version: ${appVersion}` );
 
-//the first time the app is run this will be set to false thus requiring a check
+//the first time the app is run isAWS will be undefined thus requiring a check
 //of if the app can access the S3 bucket
 if (app.locals.isAWS === undefined){
   // Create S3 service object
@@ -487,17 +609,20 @@ if (app.locals.isAWS === undefined){
 
   s3.headBucket(bucketParams, function(err,data){
     if (err) { //there was some error in accessing the bucket, or it does not exist -> don't show ACK menu item
-      let msg = "If this is not running on AWS and/or you have no intention of using the ACK please ignore. \n" +
-                   " - Error in accessing the " + ns + "-bucket, or it does not exist. \n" +
-                   " - ACK feature disabled";
-      console.log(msg);
+      console.log("ACK feature disabled. " + ns + "-bucket not found.");
       app.locals.isAWS = false;
+
+      //Then check if it is running on Azure, and if so set it up.
+      checkIfAzure();
     } else { //show the ack feature
       console.log("Bucket accessible, enabling ACK feature.");
       app.locals.isAWS = true;
+      app.locals.isAzure = false;
     }
   });
-}
+
+} 
+
 
 app.listen(app.get('port'), '0.0.0.0', function() {
   console.log(pod + ': server starting on port ' + app.get('port'));

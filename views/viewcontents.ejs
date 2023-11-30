@@ -1,0 +1,17 @@
+<%- include('templates/header.ejs'); %>
+<% var page = (locals.isAWS) ? 'ack' :'aso'; %>
+<%- include('templates/nav.ejs', {page: page});%>
+
+<div class="blank-slate-pf container-pf-nav-pf-vertical file-output">
+    <a href="/<%= page %>" class="btn btn-primary"><span class="fa fa-angle-left"></span> Back</a>
+    <h1>
+        <%= filename %>
+    </h1>
+    <div class="row">
+        <div class="col-lg-9">
+            <pre><%= content %></pre>
+        </div>
+    </div>
+</div>
+
+<%- include('templates/footer.ejs'); %>
